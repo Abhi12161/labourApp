@@ -1,8 +1,13 @@
 import { ConfigProvider } from 'antd';
 import { RouterProvider } from 'react-router';
+import { useState } from 'react';
 import { router } from './routes';
+import SplashScreen from './providers/SplashScreen';
+
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
+
   return (
     <ConfigProvider
       theme={{
@@ -17,7 +22,11 @@ export default function App() {
         },
       }}
     >
-      <RouterProvider router={router} />
+      {loading ? (
+        <SplashScreen onFinish={() => setLoading(false)} />
+      ) : (
+        <RouterProvider router={router} />
+      )}
     </ConfigProvider>
   );
 }
