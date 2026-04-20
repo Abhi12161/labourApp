@@ -1,38 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import { Avatar, Button, Card, Empty, Input, Modal, Rate, Tag, Typography } from 'antd';
+import { Col, Container, Form, InputGroup, Nav, Row } from 'react-bootstrap';
 import {
-  Box,
-  Container,
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  TextField,
-  InputAdornment,
-  Avatar,
-  Chip,
-  Rating,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import {
+  EnvironmentOutlined,
   LogoutOutlined,
+  PlusOutlined,
   ProjectOutlined,
   SearchOutlined,
-  EnvironmentOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../providers/AuthProvider';
 import { useLanguage } from '../../providers/LanguageProvider';
+
+const { Title, Text, Paragraph } = Typography;
 
 const mockLaborers = [
   { id: 1, name: 'Ramesh Sharma', skills: ['Raj Mistri (Mason)', 'Construction Worker'], rating: 4.8, reviews: 87, rate: 500, location: 'Muzaffarpur', experience: 8, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' },
@@ -57,7 +38,7 @@ const skillOptions = [
 const cities = ['All', 'Muzaffarpur', 'Patna', 'Gaya', 'Bhagalpur', 'Darbhanga', 'Purnia', 'Munger', 'Chapra'];
 
 export function ConsumerDashboardPage() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('workers');
   const [showRequirementForm, setShowRequirementForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
@@ -78,6 +59,18 @@ export function ConsumerDashboardPage() {
   const common = t.common;
   const copy = t.consumerDashboard;
 
+  const resetRequirementForm = () => {
+    setRequirementForm({
+      rajMistriCount: 0,
+      laborerCount: 0,
+      skills: [],
+      location: 'Muzaffarpur',
+      budget: 0,
+      deadline: '',
+      description: '',
+    });
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -92,8 +85,8 @@ export function ConsumerDashboardPage() {
     }));
   };
 
-  const handleSubmitRequirement = (e) => {
-    e.preventDefault();
+  const handleSubmitRequirement = (event) => {
+    event.preventDefault();
 
     const newRequirement = {
       id: Date.now(),
@@ -101,406 +94,389 @@ export function ConsumerDashboardPage() {
       status: 'open',
     };
 
-    setRequirements([newRequirement, ...requirements]);
+    setRequirements((prev) => [newRequirement, ...prev]);
     setShowRequirementForm(false);
-    setRequirementForm({
-      rajMistriCount: 0,
-      laborerCount: 0,
-      skills: [],
-      location: 'Muzaffarpur',
-      budget: 0,
-      deadline: '',
-      description: '',
-    });
+    resetRequirementForm();
   };
 
   const filteredLaborers = mockLaborers.filter((laborer) => {
+    const normalizedQuery = searchQuery.toLowerCase();
     const matchesSearch =
-      laborer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      laborer.skills.some((skill) => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+      laborer.name.toLowerCase().includes(normalizedQuery) ||
+      laborer.skills.some((skill) => skill.toLowerCase().includes(normalizedQuery));
     const matchesLocation = locationFilter === 'All' || laborer.location === locationFilter;
 
     return matchesSearch && matchesLocation;
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f7fa' }}>
-      <AppBar position="sticky" sx={{ bgcolor: '#fff', boxShadow: 1 }}>
-        <Toolbar>
-          <ProjectOutlined style={{ fontSize: 28, color: '#1976d2', marginRight: 12 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: '#000' }}>
-            {common.appName}
-          </Typography>
-          <Typography variant="body2" sx={{ mr: 2, color: 'text.secondary' }}>
-            {user?.name || common.consumer}
-          </Typography>
-          <Button startIcon={<LogoutOutlined />} onClick={handleLogout} sx={{ color: 'text.secondary' }}>
-            {common.logout}
-          </Button>
-        </Toolbar>
-      </AppBar>
+    <div className="dashboard-page">
+      <header className="dashboard-appbar">
+        <Container fluid="xl">
+          <div className="dashboard-topbar">
+            <div className="dashboard-brand">
+              <ProjectOutlined style={{ fontSize: 28, color: '#1976d2' }} />
+              <Text className="dashboard-brand-title">{common.appName}</Text>
+            </div>
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+            <div className="dashboard-userbar">
+              <Text className="dashboard-userbar-name">{user?.name || common.consumer}</Text>
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                className="dashboard-logout-button"
+              >
+                {common.logout}
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </header>
+
+      <Container fluid="xl" className="dashboard-container dashboard-container-compact">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box>
-              <Typography variant="h3" fontWeight="bold" gutterBottom>
+          <div className="dashboard-hero">
+            <div>
+              <Title level={1} className="dashboard-page-title dashboard-page-title-consumer">
                 {copy.title}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
+              </Title>
+              <Paragraph className="dashboard-page-subtitle dashboard-page-subtitle-wide">
                 {copy.subtitle}
-              </Typography>
-            </Box>
+              </Paragraph>
+            </div>
+
             <Button
-              variant="contained"
-              startIcon={<PlusOutlined />}
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => setShowRequirementForm(true)}
-              sx={{
-                background: 'linear-gradient(135deg, #1976d2 0%, #3949ab 100%)',
-                borderRadius: 2,
-                px: 3,
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 600,
-              }}
+              className="dashboard-primary-button dashboard-primary-button-consumer dashboard-primary-button-wide"
             >
               {copy.postRequirement}
             </Button>
-          </Box>
+          </div>
 
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-            <Tab label={copy.browseWorkers} sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 600 }} />
-            <Tab label={`${copy.myRequirements} (${requirements.length})`} sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 600 }} />
-          </Tabs>
+          <div className="dashboard-tabs">
+            <Nav
+              variant="tabs"
+              activeKey={activeTab}
+              onSelect={(selectedKey) => setActiveTab(selectedKey || 'workers')}
+              className="dashboard-tab-nav"
+            >
+              <Nav.Item>
+                <Nav.Link eventKey="workers" className="dashboard-tab-link">
+                  {copy.browseWorkers}
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="requirements" className="dashboard-tab-link">
+                  {copy.myRequirements} ({requirements.length})
+                </Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </div>
 
-          {activeTab === 0 ? (
+          {activeTab === 'workers' ? (
             <>
-              <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+              <Row className="g-3 mb-4">
+                <Col xs={12} md={6}>
+                  <Input
+                    prefix={<SearchOutlined style={{ color: '#1976d2' }} />}
                     placeholder={copy.searchPlaceholder}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchOutlined style={{ color: '#1976d2' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{ bgcolor: '#fff', borderRadius: 2 }}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    size="large"
+                    className="dashboard-input-control"
                   />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    select
-                    label={common.location}
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <EnvironmentOutlined style={{ color: '#1976d2' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{ bgcolor: '#fff', borderRadius: 2 }}
-                  >
-                    {cities.map((city) => (
-                      <MenuItem key={city} value={city}>
-                        {city === 'All' ? common.allCities : city}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-              </Grid>
+                </Col>
+                <Col xs={12} md={6}>
+                  <InputGroup className="dashboard-input-group">
+                    <InputGroup.Text className="dashboard-input-addon">
+                      <EnvironmentOutlined style={{ color: '#1976d2' }} />
+                    </InputGroup.Text>
+                    <Form.Select
+                      aria-label={common.location}
+                      value={locationFilter}
+                      onChange={(event) => setLocationFilter(event.target.value)}
+                      className="dashboard-select-control"
+                    >
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city === 'All' ? common.allCities : city}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </InputGroup>
+                </Col>
+              </Row>
 
-              <Grid container spacing={3}>
+              <Row className="g-4">
                 {filteredLaborers.map((laborer, index) => (
-                  <Grid item xs={12} sm={6} lg={4} key={laborer.id}>
+                  <Col xs={12} sm={6} lg={4} key={laborer.id}>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.05 }}
                       whileHover={{ y: -4 }}
                     >
-                      <Card sx={{ borderRadius: 3, boxShadow: 2, '&:hover': { boxShadow: 4 } }}>
-                        <CardContent sx={{ p: 3 }}>
-                          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                            <Avatar src={laborer.image} sx={{ width: 64, height: 64 }} />
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="h6" fontWeight="bold">
+                      <Card className="dashboard-worker-card dashboard-section-card dashboard-card-elevated" bordered={false}>
+                        <div className="dashboard-card-body dashboard-card-body-spacious">
+                          <div className="dashboard-worker-header">
+                            <Avatar src={laborer.image} size={64} className="dashboard-avatar" />
+                            <div className="dashboard-worker-header-copy">
+                              <Title level={4} className="dashboard-card-title">
                                 {laborer.name}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {laborer.experience} years exp
-                              </Typography>
-                            </Box>
-                          </Box>
+                              </Title>
+                              <Text className="dashboard-card-muted">{laborer.experience} years exp</Text>
+                            </div>
+                          </div>
 
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                          <div className="dashboard-chip-wrap dashboard-chip-wrap-spaced">
                             {laborer.skills.map((skill) => (
-                              <Chip key={skill} label={skill} size="small" sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }} />
+                              <Tag key={skill} className="dashboard-chip dashboard-chip-consumer">
+                                {skill}
+                              </Tag>
                             ))}
-                          </Box>
+                          </div>
 
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Rating value={laborer.rating} precision={0.1} size="small" readOnly />
-                            <Typography variant="body2" fontWeight={600}>
-                              {laborer.rating}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              ({laborer.reviews} reviews)
-                            </Typography>
-                          </Box>
+                          <div className="dashboard-rating-row">
+                            <Rate disabled allowHalf defaultValue={laborer.rating} className="dashboard-rating" />
+                            <Text className="dashboard-rating-value">{laborer.rating}</Text>
+                            <Text className="dashboard-card-muted">({laborer.reviews} reviews)</Text>
+                          </div>
 
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <div className="dashboard-meta-row dashboard-meta-row-spaced">
                             <EnvironmentOutlined style={{ fontSize: 16, color: '#666' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {laborer.location}
-                            </Typography>
-                          </Box>
+                            <Text className="dashboard-card-muted">{laborer.location}</Text>
+                          </div>
 
-                          <Typography variant="h6" fontWeight="bold" color="#1976d2" mb={2}>
-                            ₹{laborer.rate}/day
-                          </Typography>
+                          <Title level={4} className="dashboard-price dashboard-price-consumer">
+                            Rs {laborer.rate}/day
+                          </Title>
 
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            sx={{
-                              background: 'linear-gradient(135deg, #1976d2 0%, #3949ab 100%)',
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 600,
-                            }}
-                          >
+                          <Button type="primary" block className="dashboard-primary-button dashboard-primary-button-consumer">
                             {copy.contactWorker}
                           </Button>
-                        </CardContent>
+                        </div>
                       </Card>
                     </motion.div>
-                  </Grid>
+                  </Col>
                 ))}
-              </Grid>
+              </Row>
             </>
           ) : (
-            <Box>
+            <div>
               {requirements.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <Typography variant="body1" color="text.secondary" mb={2}>
-                    {copy.noRequirements}
-                  </Typography>
-                  <Button onClick={() => setShowRequirementForm(true)} sx={{ color: '#1976d2', fontWeight: 600 }}>
+                <div className="dashboard-empty">
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={<Text className="dashboard-card-muted">{copy.noRequirements}</Text>}
+                  />
+                  <Button type="link" onClick={() => setShowRequirementForm(true)} className="dashboard-link-button">
                     {copy.postFirstRequirement}
                   </Button>
-                </Box>
+                </div>
               ) : (
-                <Grid container spacing={3}>
+                <Row className="g-4">
                   {requirements.map((requirement) => (
-                    <Grid item xs={12} key={requirement.id}>
-                      <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-                        <CardContent sx={{ p: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">
+                    <Col xs={12} key={requirement.id}>
+                      <Card className="dashboard-requirement-card dashboard-section-card dashboard-card-elevated" bordered={false}>
+                        <div className="dashboard-card-body dashboard-card-body-spacious">
+                          <div className="dashboard-card-header">
+                            <Title level={4} className="dashboard-card-title dashboard-card-title-wrap">
                               {requirement.description}
-                            </Typography>
-                            <Chip
-                              label={requirement.status === 'open' ? common.open : common.matched}
-                              color={requirement.status === 'open' ? 'success' : 'primary'}
-                              size="small"
-                            />
-                          </Box>
+                            </Title>
+                            <Tag className={`dashboard-status-chip ${requirement.status === 'open' ? 'open' : 'matched'}`}>
+                              {requirement.status === 'open' ? common.open : common.matched}
+                            </Tag>
+                          </div>
 
-                          <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
-                                {copy.workersNeeded}
-                              </Typography>
-                              <Typography variant="body1" fontWeight={600}>
+                          <Row className="g-3">
+                            <Col xs={12} sm={6} md={3}>
+                              <Text className="dashboard-stat-label">{copy.workersNeeded}</Text>
+                              <div className="dashboard-stat-value">
                                 {requirement.rajMistriCount} Raj Mistri, {requirement.laborerCount} Laborer
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
-                                {common.location}
-                              </Typography>
-                              <Typography variant="body1" fontWeight={600}>
-                                {requirement.location}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
-                                {common.budgetPerDay}
-                              </Typography>
-                              <Typography variant="body1" fontWeight={600}>
-                                ₹{requirement.budget}/day
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
-                                {common.deadline}
-                              </Typography>
-                              <Typography variant="body1" fontWeight={600}>
-                                {requirement.deadline}
-                              </Typography>
-                            </Grid>
-                          </Grid>
+                              </div>
+                            </Col>
+                            <Col xs={12} sm={6} md={3}>
+                              <Text className="dashboard-stat-label">{common.location}</Text>
+                              <div className="dashboard-stat-value">{requirement.location}</div>
+                            </Col>
+                            <Col xs={12} sm={6} md={3}>
+                              <Text className="dashboard-stat-label">{common.budgetPerDay}</Text>
+                              <div className="dashboard-stat-value">Rs {requirement.budget}/day</div>
+                            </Col>
+                            <Col xs={12} sm={6} md={3}>
+                              <Text className="dashboard-stat-label">{common.deadline}</Text>
+                              <div className="dashboard-stat-value">{requirement.deadline}</div>
+                            </Col>
+                          </Row>
 
                           {requirement.skills.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                              <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                                {copy.requiredSkills}
-                              </Typography>
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            <div className="dashboard-skills-block">
+                              <Text className="dashboard-stat-label dashboard-skills-label">{copy.requiredSkills}</Text>
+                              <div className="dashboard-chip-wrap">
                                 {requirement.skills.map((skill) => (
-                                  <Chip key={skill} label={skill} size="small" sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }} />
+                                  <Tag key={skill} className="dashboard-chip dashboard-chip-consumer">
+                                    {skill}
+                                  </Tag>
                                 ))}
-                              </Box>
-                            </Box>
+                              </div>
+                            </div>
                           )}
-                        </CardContent>
+                        </div>
                       </Card>
-                    </Grid>
+                    </Col>
                   ))}
-                </Grid>
+                </Row>
               )}
-            </Box>
+            </div>
           )}
         </motion.div>
       </Container>
 
-      <Dialog open={showRequirementForm} onClose={() => setShowRequirementForm(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Typography variant="h5" fontWeight="bold">
-            {copy.postRequirementTitle}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleSubmitRequirement} sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <TextField
-              fullWidth
-              multiline
+      <Modal
+        open={showRequirementForm}
+        onCancel={() => setShowRequirementForm(false)}
+        footer={null}
+        width={820}
+        centered
+        className="dashboard-dialog"
+        title={<Title level={3} className="dashboard-modal-title">{copy.postRequirementTitle}</Title>}
+      >
+        <Form onSubmit={handleSubmitRequirement} className="dashboard-form">
+          <Form.Group className="mb-4">
+            <Form.Label className="dashboard-form-label">{copy.description}</Form.Label>
+            <Form.Control
+              as="textarea"
               rows={3}
-              label={copy.description}
               value={requirementForm.description}
-              onChange={(e) => setRequirementForm({ ...requirementForm, description: e.target.value })}
+              onChange={(event) => setRequirementForm({ ...requirementForm, description: event.target.value })}
               placeholder={copy.descriptionPlaceholder}
               required
+              className="dashboard-form-control"
             />
+          </Form.Group>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
+          <Row className="g-3 mb-4">
+            <Col xs={12} sm={6}>
+              <Form.Group>
+                <Form.Label className="dashboard-form-label">{copy.numberOfRajMistri}</Form.Label>
+                <Form.Control
                   type="number"
-                  label={copy.numberOfRajMistri}
+                  min={0}
                   value={requirementForm.rajMistriCount}
-                  onChange={(e) => setRequirementForm({ ...requirementForm, rajMistriCount: Number.parseInt(e.target.value, 10) || 0 })}
-                  inputProps={{ min: 0 }}
+                  onChange={(event) =>
+                    setRequirementForm({
+                      ...requirementForm,
+                      rajMistriCount: Number.parseInt(event.target.value, 10) || 0,
+                    })
+                  }
                   required
+                  className="dashboard-form-control"
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
+              </Form.Group>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Form.Group>
+                <Form.Label className="dashboard-form-label">{copy.numberOfLaborers}</Form.Label>
+                <Form.Control
                   type="number"
-                  label={copy.numberOfLaborers}
+                  min={0}
                   value={requirementForm.laborerCount}
-                  onChange={(e) => setRequirementForm({ ...requirementForm, laborerCount: Number.parseInt(e.target.value, 10) || 0 })}
-                  inputProps={{ min: 0 }}
+                  onChange={(event) =>
+                    setRequirementForm({
+                      ...requirementForm,
+                      laborerCount: Number.parseInt(event.target.value, 10) || 0,
+                    })
+                  }
                   required
+                  className="dashboard-form-control"
                 />
-              </Grid>
-            </Grid>
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Box>
-              <Typography variant="body2" fontWeight={600} mb={2}>
-                {copy.skillsRequiredOptional}
-              </Typography>
-              <Grid container spacing={1}>
-                {skillOptions.map((skill) => (
-                  <Grid item xs={6} key={skill}>
-                    <Chip
-                      label={skill}
-                      onClick={() => handleSkillToggle(skill)}
-                      clickable
-                      sx={{
-                        width: '100%',
-                        justifyContent: 'flex-start',
-                        background: requirementForm.skills.includes(skill)
-                          ? 'linear-gradient(135deg, #1976d2 0%, #3949ab 100%)'
-                          : '#f5f5f5',
-                        color: requirementForm.skills.includes(skill) ? '#fff' : 'text.primary',
-                        fontWeight: requirementForm.skills.includes(skill) ? 600 : 400,
-                      }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
+          <div className="mb-4">
+            <Text className="dashboard-form-label dashboard-form-label-block">{copy.skillsRequiredOptional}</Text>
+            <div className="skill-toggle-grid">
+              {skillOptions.map((skill) => {
+                const isActive = requirementForm.skills.includes(skill);
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label={common.location}
+                return (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => handleSkillToggle(skill)}
+                    className={`skill-toggle-chip ${isActive ? 'active consumer' : ''}`}
+                  >
+                    {skill}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Row className="g-3 mb-4">
+            <Col xs={12} sm={6}>
+              <Form.Group>
+                <Form.Label className="dashboard-form-label">{common.location}</Form.Label>
+                <Form.Select
                   value={requirementForm.location}
-                  onChange={(e) => setRequirementForm({ ...requirementForm, location: e.target.value })}
+                  onChange={(event) => setRequirementForm({ ...requirementForm, location: event.target.value })}
                   required
+                  className="dashboard-form-control dashboard-form-select"
                 >
                   {cities.filter((city) => city !== 'All').map((city) => (
-                    <MenuItem key={city} value={city}>
+                    <option key={city} value={city}>
                       {city}
-                    </MenuItem>
+                    </option>
                   ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Form.Group>
+                <Form.Label className="dashboard-form-label">{common.budgetPerDay}</Form.Label>
+                <Form.Control
                   type="number"
-                  label={common.budgetPerDay}
+                  min={0}
                   value={requirementForm.budget}
-                  onChange={(e) => setRequirementForm({ ...requirementForm, budget: Number.parseInt(e.target.value, 10) || 0 })}
-                  placeholder="₹"
-                  inputProps={{ min: 0 }}
+                  onChange={(event) =>
+                    setRequirementForm({
+                      ...requirementForm,
+                      budget: Number.parseInt(event.target.value, 10) || 0,
+                    })
+                  }
+                  placeholder="Rs"
                   required
+                  className="dashboard-form-control"
                 />
-              </Grid>
-            </Grid>
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <TextField
-              fullWidth
+          <Form.Group className="mb-4">
+            <Form.Label className="dashboard-form-label">{common.deadline}</Form.Label>
+            <Form.Control
               type="date"
-              label={common.deadline}
               value={requirementForm.deadline}
-              onChange={(e) => setRequirementForm({ ...requirementForm, deadline: e.target.value })}
-              InputLabelProps={{ shrink: true }}
+              onChange={(event) => setRequirementForm({ ...requirementForm, deadline: event.target.value })}
               required
+              className="dashboard-form-control"
             />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setShowRequirementForm(false)}>{common.cancel}</Button>
-          <Button
-            onClick={handleSubmitRequirement}
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #1976d2 0%, #3949ab 100%)',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-            }}
-          >
-            {copy.submitRequirement}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          </Form.Group>
+
+          <div className="dashboard-modal-actions">
+            <Button onClick={() => setShowRequirementForm(false)} className="dashboard-secondary-button">
+              {common.cancel}
+            </Button>
+            <Button htmlType="submit" type="primary" className="dashboard-primary-button dashboard-primary-button-consumer">
+              {copy.submitRequirement}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    </div>
   );
 }

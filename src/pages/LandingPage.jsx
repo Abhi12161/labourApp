@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { Button, Card, Select, Typography } from 'antd';
@@ -11,17 +12,103 @@ import {
   ToolOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import { useLanguage } from '../providers/LanguageProvider';
 
 export function LandingPage() {
   const { language, setLanguage, t, languageOptions } = useLanguage();
   const landing = t.landing;
   const common = t.common;
+  const [location, setLocation] = useState('Fetching location...');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 576);
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+            );
+            const data = await res.json();
+
+            const a = data.address;
+
+            const exact = [
+              a.house_number,
+              a.road,
+              a.suburb || a.neighbourhood,
+              a.city || a.town || a.village,
+              a.state,
+              a.postcode,
+              a.country,
+            ]
+              .filter(Boolean)
+              .join(', ');
+
+            setLocation(exact || data.display_name || 'Location not found');
+          } catch (err) {
+            setLocation('Error fetching location');
+          }
+        },
+        () => setLocation('Permission denied')
+      );
+    }
+  }, []);
+
+
+
+
+  const getShortLocation = (loc) => {
+    if (!loc) return '';
+    const parts = loc.split(',');
+    return parts.length > 2 ? parts[parts.length - 4]?.trim() || parts[0] : parts[0];
+  };
+
+  const shortLocation = getShortLocation(location);
 
   return (
-    <div className="brand-shell">
+    <div className="brand-shell" style={{ position: 'relative' }}>
+      <Tooltip title={location} placement="bottom">
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: isMobile ? 'auto' : '12px',
+            left: isMobile ? '11%' : 'auto',
+            background: 'rgba(0, 0, 0, 0.65)',
+            color: '#fff',
+            padding: '6px 12px',
+            borderRadius: '18px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            zIndex: 1000,
+            backdropFilter: 'blur(6px)',
+            maxWidth: isMobile ? '70%' : '320px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          <EnvironmentOutlined />
+          <span>
+            {isMobile ? shortLocation : location}
+          </span>
+        </div>
+      </Tooltip>
       <div className="brand-content">
         <section className="brand-hero">
+
           <div className="brand-container text-center">
             <motion.div
               initial={{ opacity: 0, y: 18 }}

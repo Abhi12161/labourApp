@@ -1,35 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import { Button, Card, Empty, Tag, Typography } from 'antd';
+import { Col, Container, Nav, Row } from 'react-bootstrap';
 import {
-  Box,
-  Container,
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  Chip,
-  Tabs,
-  Tab,
-  Paper,
-} from '@mui/material';
-import {
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+  EnvironmentOutlined,
   LogoutOutlined,
   ProjectOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  StarFilled,
-  ClockCircleOutlined,
-  EnvironmentOutlined,
-  UserOutlined,
-  CalendarOutlined,
   RiseOutlined,
+  StarFilled,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../providers/AuthProvider';
 import { useLanguage } from '../../providers/LanguageProvider';
+
+const { Title, Text, Paragraph } = Typography;
 
 const mockJobRequirements = [
   {
@@ -87,14 +76,14 @@ const mockJobRequirements = [
 ];
 
 const stats = [
-  { key: 'earnings', value: '₹42,500', icon: DollarOutlined, trend: '+12%', color: '#4caf50' },
+  { key: 'earnings', value: 'Rs 42,500', icon: DollarOutlined, trend: '+12%', color: '#4caf50' },
   { key: 'completed', value: '23', icon: CheckCircleOutlined, trend: '+8%', color: '#1976d2' },
   { key: 'rating', value: '4.7', icon: StarFilled, trend: '+0.2', color: '#ff9800' },
   { key: 'active', value: '5', icon: ClockCircleOutlined, trend: '+3', color: '#f57c00' },
 ];
 
 export function LaborerDashboardPage() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('available');
   const [appliedJobs, setAppliedJobs] = useState([]);
   const { user, logout } = useAuth();
   const { t } = useLanguage();
@@ -108,14 +97,14 @@ export function LaborerDashboardPage() {
   };
 
   const handleApply = (jobId) => {
-    setAppliedJobs([...appliedJobs, jobId]);
+    setAppliedJobs((prev) => [...prev, jobId]);
   };
 
   const filteredJobs = mockJobRequirements.filter((job) => {
     const matchesLocation = user?.location ? job.location === user.location : true;
     const matchesSkills = user?.skills?.some((skill) => job.skills.includes(skill)) || false;
 
-    if (activeTab === 0) {
+    if (activeTab === 'available') {
       return !appliedJobs.includes(job.id) && (matchesLocation || matchesSkills);
     }
 
@@ -123,214 +112,203 @@ export function LaborerDashboardPage() {
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f7fa' }}>
-      <AppBar position="sticky" sx={{ bgcolor: '#fff', boxShadow: 1 }}>
-        <Toolbar>
-          <ProjectOutlined style={{ fontSize: 28, color: '#f57c00', marginRight: 12 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: '#000' }}>
-            {common.appName}
-          </Typography>
-          <Typography variant="body2" sx={{ mr: 2, color: 'text.secondary' }}>
-            {user?.name || common.laborer}
-          </Typography>
-          <Button startIcon={<LogoutOutlined />} onClick={handleLogout} sx={{ color: 'text.secondary' }}>
-            {common.logout}
-          </Button>
-        </Toolbar>
-      </AppBar>
+    <div className="dashboard-page">
+      <header className="dashboard-appbar">
+        <Container fluid="xl">
+          <div className="dashboard-topbar">
+            <div className="dashboard-brand">
+              <ProjectOutlined style={{ fontSize: 28, color: '#f57c00' }} />
+              <Text className="dashboard-brand-title">{common.appName}</Text>
+            </div>
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+            <div className="dashboard-userbar">
+              <Text className="dashboard-userbar-name">{user?.name || common.laborer}</Text>
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                className="dashboard-logout-button"
+              >
+                {common.logout}
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </header>
+
+      <Container fluid="xl" className="dashboard-container">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Typography variant="h3" fontWeight="bold" gutterBottom>
+          <Title level={1} className="dashboard-page-title">
             {copy.title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary" mb={4}>
+          </Title>
+          <Paragraph className="dashboard-page-subtitle dashboard-page-subtitle-wide">
             {copy.subtitle}
-          </Typography>
+          </Paragraph>
 
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Row className="g-4 mb-4">
             {stats.map((stat, index) => (
-              <Grid item xs={12} sm={6} md={3} key={stat.key}>
+              <Col xs={12} sm={6} md={3} key={stat.key}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                 >
-                  <Card sx={{ borderRadius: 3, boxShadow: 2, height: '100%' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 2,
-                            bgcolor: `${stat.color}15`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                  <Card className="dashboard-stat-card dashboard-section-card dashboard-card-elevated" bordered={false}>
+                    <div className="dashboard-card-body dashboard-card-body-spacious">
+                      <div className="dashboard-stat-card-top">
+                        <div
+                          className="dashboard-stat-icon"
+                          style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
                         >
-                          <stat.icon style={{ fontSize: 24, color: stat.color }} />
-                        </Box>
-                        <Chip
-                          label={stat.trend}
-                          size="small"
-                          icon={<RiseOutlined />}
-                          sx={{
-                            bgcolor: '#e8f5e9',
-                            color: '#4caf50',
-                            fontWeight: 600,
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="h4" fontWeight="bold" mb={0.5}>
+                          <stat.icon />
+                        </div>
+                        <Tag className="dashboard-trend-chip">
+                          <RiseOutlined />
+                          {stat.trend}
+                        </Tag>
+                      </div>
+                      <Title level={3} className="dashboard-stat-number">
                         {stat.value}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {copy.stats[stat.key]}
-                      </Typography>
-                    </CardContent>
+                      </Title>
+                      <Text className="dashboard-card-muted">{copy.stats[stat.key]}</Text>
+                    </div>
                   </Card>
                 </motion.div>
-              </Grid>
+              </Col>
             ))}
-          </Grid>
+          </Row>
 
-          <Box sx={{ mb: 3 }}>
-            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-              <Tab
-                label={`${copy.availableJobs} (${mockJobRequirements.filter((job) => !appliedJobs.includes(job.id)).length})`}
-                sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 600 }}
-              />
-              <Tab
-                label={`${copy.myApplications} (${appliedJobs.length})`}
-                sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 600 }}
-              />
-            </Tabs>
-          </Box>
+          <div className="dashboard-tabs">
+            <Nav
+              variant="tabs"
+              activeKey={activeTab}
+              onSelect={(selectedKey) => setActiveTab(selectedKey || 'available')}
+              className="dashboard-tab-nav"
+            >
+              <Nav.Item>
+                <Nav.Link eventKey="available" className="dashboard-tab-link">
+                  {copy.availableJobs} ({mockJobRequirements.filter((job) => !appliedJobs.includes(job.id)).length})
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="applications" className="dashboard-tab-link">
+                  {copy.myApplications} ({appliedJobs.length})
+                </Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </div>
 
-          <Grid container spacing={3}>
+          <Row className="g-4">
             {filteredJobs.length === 0 ? (
-              <Grid item xs={12}>
-                <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
-                  <Typography variant="h6" color="text.secondary">
-                    {activeTab === 0 ? copy.noAvailableJobs : copy.noApplications}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mt={1}>
-                    {activeTab === 0 ? copy.checkBackLater : copy.startApplying}
-                  </Typography>
-                </Paper>
-              </Grid>
+              <Col xs={12}>
+                <Card className="dashboard-section-card dashboard-empty-card" bordered={false}>
+                  <div className="dashboard-empty">
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <div>
+                          <Title level={4} className="dashboard-empty-title">
+                            {activeTab === 'available' ? copy.noAvailableJobs : copy.noApplications}
+                          </Title>
+                          <Text className="dashboard-card-muted">
+                            {activeTab === 'available' ? copy.checkBackLater : copy.startApplying}
+                          </Text>
+                        </div>
+                      }
+                    />
+                  </div>
+                </Card>
+              </Col>
             ) : (
               filteredJobs.map((job, index) => (
-                <Grid item xs={12} lg={6} key={job.id}>
+                <Col xs={12} lg={6} key={job.id}>
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
                   >
                     <Card
-                      sx={{
-                        borderRadius: 3,
-                        boxShadow: 2,
-                        border: '2px solid',
-                        borderColor: appliedJobs.includes(job.id) ? '#f57c00' : 'transparent',
-                        '&:hover': { boxShadow: 4 },
-                      }}
+                      className={`dashboard-job-card dashboard-section-card dashboard-card-elevated ${
+                        appliedJobs.includes(job.id) ? 'dashboard-job-card-applied' : ''
+                      }`}
+                      bordered={false}
                     >
-                      <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                          <Box>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      <div className="dashboard-card-body dashboard-card-body-spacious">
+                        <div className="dashboard-card-header">
+                          <div className="dashboard-card-header-copy">
+                            <Title level={4} className="dashboard-card-title dashboard-card-title-wrap">
                               {job.description}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            </Title>
+                            <div className="dashboard-meta-row">
                               <UserOutlined style={{ fontSize: 14, color: '#666' }} />
-                              <Typography variant="body2" color="text.secondary">
-                                {job.consumerName}
-                              </Typography>
-                            </Box>
-                          </Box>
+                              <Text className="dashboard-card-muted">{job.consumerName}</Text>
+                            </div>
+                          </div>
                           {appliedJobs.includes(job.id) && (
-                            <Chip label={copy.applied} color="warning" size="small" icon={<CheckCircleOutlined />} />
+                            <Tag className="dashboard-status-chip applied">
+                              <CheckCircleOutlined />
+                              {copy.applied}
+                            </Tag>
                           )}
-                        </Box>
+                        </div>
 
-                        <Grid container spacing={2} sx={{ mb: 2 }}>
-                          <Grid item xs={6}>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              {copy.workersNeeded}
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600}>
+                        <Row className="g-3 mb-3">
+                          <Col xs={6}>
+                            <Text className="dashboard-stat-label">{copy.workersNeeded}</Text>
+                            <div className="dashboard-stat-value">
                               {job.rajMistriCount} Raj Mistri, {job.laborerCount} Laborer
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              {copy.budget}
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600} color="#4caf50">
-                              ₹{job.budget}/day
-                            </Typography>
-                          </Grid>
-                        </Grid>
+                            </div>
+                          </Col>
+                          <Col xs={6}>
+                            <Text className="dashboard-stat-label">{copy.budget}</Text>
+                            <div className="dashboard-stat-value dashboard-stat-value-success">Rs {job.budget}/day</div>
+                          </Col>
+                        </Row>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <div className="dashboard-meta-row dashboard-meta-row-spaced">
                           <EnvironmentOutlined style={{ fontSize: 16, color: '#666' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {job.location}
-                          </Typography>
-                        </Box>
+                          <Text className="dashboard-card-muted">{job.location}</Text>
+                        </div>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <div className="dashboard-meta-row dashboard-meta-row-spaced dashboard-meta-row-bottom">
                           <CalendarOutlined style={{ fontSize: 16, color: '#666' }} />
-                          <Typography variant="body2" color="text.secondary">
+                          <Text className="dashboard-card-muted">
                             {copy.deadlineLabel}: {job.deadline}
-                          </Typography>
-                        </Box>
+                          </Text>
+                        </div>
 
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                        <div className="dashboard-chip-wrap dashboard-chip-wrap-spaced">
                           {job.skills.map((skill) => (
-                            <Chip
+                            <Tag
                               key={skill}
-                              label={skill}
-                              size="small"
-                              sx={{
-                                bgcolor: user?.skills?.includes(skill) ? '#fff3e0' : '#f5f5f5',
-                                color: user?.skills?.includes(skill) ? '#f57c00' : 'text.secondary',
-                                fontWeight: user?.skills?.includes(skill) ? 600 : 400,
-                              }}
-                            />
+                              className={`dashboard-chip ${
+                                user?.skills?.includes(skill) ? 'dashboard-chip-laborer-match' : 'dashboard-chip-muted'
+                              }`}
+                            >
+                              {skill}
+                            </Tag>
                           ))}
-                        </Box>
+                        </div>
 
                         {!appliedJobs.includes(job.id) && (
                           <Button
-                            fullWidth
-                            variant="contained"
+                            type="primary"
+                            block
                             onClick={() => handleApply(job.id)}
-                            sx={{
-                              background: 'linear-gradient(135deg, #f57c00 0%, #ff6f00 100%)',
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 600,
-                              '&:hover': {
-                                background: 'linear-gradient(135deg, #e65100 0%, #f57c00 100%)',
-                              },
-                            }}
+                            className="dashboard-primary-button dashboard-primary-button-laborer"
                           >
                             {copy.applyNow}
                           </Button>
                         )}
-                      </CardContent>
+                      </div>
                     </Card>
                   </motion.div>
-                </Grid>
+                </Col>
               ))
             )}
-          </Grid>
+          </Row>
         </motion.div>
       </Container>
-    </Box>
+    </div>
   );
 }
